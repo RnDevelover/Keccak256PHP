@@ -14,10 +14,10 @@ To install this into your php developer files installed box,
 
 Usage:
 
-$a="some text";
+$a="some text";<br/>
 $hash=substr(keccak256($a),32);
 
-Please note that, only first 32 bytes from what it returns should be considered as bytes of the hash.
+Please note that, only first 32 bytes from what keccak256() returns should be considered as bytes of the hash.
 
 ## Credits
 
