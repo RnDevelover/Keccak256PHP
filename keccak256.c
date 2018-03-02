@@ -312,6 +312,7 @@ PHP_FUNCTION(keccak256)
 {
 char *s;
 int count;
+int i;
 zend_bool return_long = 0;
 if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &s, &count) == FAILURE) {
 	RETURN_NULL();
@@ -323,5 +324,12 @@ const uint8_t *hash;
 sha3_Init256(&c);
 sha3_Update(&c, s, count);
 hash = sha3_Finalize(&c);
-RETURN_STRING(hash, 1);
+
+array_init(return_value);
+
+for(i=0;i<32;i++)
+	{
+	add_index_long(return_value, i, hash[i]);
+	}
+
 }
