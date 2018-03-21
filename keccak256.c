@@ -307,29 +307,85 @@ zend_module_entry keccak256_module_entry = {
 #ifdef COMPILE_DL_KECCAK256
 ZEND_GET_MODULE(keccak256)
 #endif
-
 PHP_FUNCTION(keccak256)
 {
+char ob;
+char cr;
+char *ch;
 char *s;
 int count;
 int i;
+int count_mem;
+char return_string[65];
+
 zend_bool return_long = 0;
 if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &s, &count) == FAILURE) {
 	RETURN_NULL();
 }
-
+if(count%2!=0)
+	RETURN_NULL();
+ch=malloc(sizeof(char)*count/2);
+count_mem=0;
+for(i=0;i<count;i++)
+	{
+	if(s[i]<58&&s[i]>47)
+		{
+		cr=s[i]-48;
+		}
+	else if(s[i]<71&&s[i]>64)
+		{
+		cr=s[i]-55;
+		}
+	else if(s[i]<103&&s[i]>96)
+		{
+		cr=s[i]-87;
+		}
+	else
+		{
+		RETURN_NULL();
+		}
+	i++;
+	ob=cr;
+        if(s[i]<58&&s[i]>47)
+                {
+		cr=s[i]-48;
+                }
+        else if(s[i]<71&&s[i]>64)
+                {
+		cr=s[i]-55;
+                }
+        else if(s[i]<103&&s[i]>96)
+                {
+		cr=s[i]-87;
+                }
+        else
+		{
+                RETURN_NULL();
+		}
+	ch[count_mem]=cr+ob*16;
+	count_mem++;
+	}
 sha3_context c;
 const uint8_t *hash;
-
 sha3_Init256(&c);
-sha3_Update(&c, s, count);
+sha3_Update(&c, ch, count_mem);
 hash = sha3_Finalize(&c);
-
-array_init(return_value);
-
+count_mem=0;
 for(i=0;i<32;i++)
 	{
-	add_index_long(return_value, i, hash[i]);
+	cr=(hash[i]&0xf0)>>4;
+	if(cr>=0&&cr<10)
+		return_string[count_mem]=cr+48;
+	else 
+		return_string[count_mem]=cr+87;
+	cr=(hash[i]&0x0F);
+	count_mem++;
+        if(cr>=0&&cr<10)
+                return_string[count_mem]=cr+48;
+        else
+                return_string[count_mem]=cr+87;
+	count_mem++;
 	}
-
+return_string[64]=0x00;
+RETURN_STRING(&return_string, 1);
 }
