@@ -163,36 +163,7 @@ Computes the Keccak256 hash of the given hex-encoded data.
 
 ## Testing
 
-Run the comprehensive test suite:
-
-```bash
-# Run all tests
-php tests/run_comprehensive_tests.php
-
-# Run all integration tests
-php tests/run_integration_tests.php
-
-# Run specific test categories
-php tests/known_vectors_test.php
-php tests/error_handling_test.php
-php tests/parameter_validation_test.php
-php tests/integration_validation_test.php
-php tests/performance_benchmark_test.php
-php tests/edge_cases_test.php
-php tests/return_value_test.php
-php tests/thread_safety_test.php
-
-```
-
-### Memory Leak Testing
-
-```bash
-# Test for memory leaks (requires Valgrind)
-./tests/valgrind_memory_test.sh
-
-# Simple memory validation
-php tests/memory_validation_simple.php
-```
+Refer to tests/README.md for detailed instructions on running the test suites.
 
 ## Compatibility
 
