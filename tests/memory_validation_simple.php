@@ -12,7 +12,6 @@
  */
 
 class MemoryValidationSimpleTest {
-    private $test_results = [];
     private $total_tests = 0;
     private $passed_tests = 0;
     
@@ -86,7 +85,7 @@ class MemoryValidationSimpleTest {
                 
                 // Interleave with valid calls
                 if ($i % 10 === 0) {
-                    $result = keccak256('deadbeef');
+                    keccak256('deadbeef');
                 }
             }
             
