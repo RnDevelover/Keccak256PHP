@@ -42,6 +42,7 @@ class ErrorHandlingTest {
         foreach ($error_cases as $input => $description) {
             $this->runTest("Exception type: $description", function() use ($input) {
                 try {
+                    /** @noinspection PhpExpressionResultUnusedInspection */
                     keccak256($input);
                     throw new Exception("Expected exception but function succeeded");
                 } catch (InvalidArgumentException $e) {
@@ -60,6 +61,7 @@ class ErrorHandlingTest {
         
         $this->runTest("Odd length error message", function() {
             try {
+                /** @noinspection PhpExpressionResultUnusedInspection */
                 keccak256('abc');
                 throw new Exception("Expected exception");
             } catch (InvalidArgumentException $e) {
@@ -74,6 +76,7 @@ class ErrorHandlingTest {
         
         $this->runTest("Invalid hex error message", function() {
             try {
+                /** @noinspection PhpExpressionResultUnusedInspection */
                 keccak256('gg');
                 throw new Exception("Expected exception");
             } catch (InvalidArgumentException $e) {
@@ -93,6 +96,7 @@ class ErrorHandlingTest {
         $this->runTest("Function works after error", function() {
             // Cause an error
             try {
+                /** @noinspection PhpExpressionResultUnusedInspection */
                 keccak256('invalid');
             } catch (InvalidArgumentException $e) {
                 // Expected

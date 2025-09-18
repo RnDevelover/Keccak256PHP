@@ -77,6 +77,7 @@ class MemoryValidationSimpleTest {
             for ($i = 0; $i < 100; $i++) {
                 foreach ($invalid_inputs as $input) {
                     try {
+                        /** @noinspection PhpExpressionResultUnusedInspection */
                         keccak256($input);
                     } catch (InvalidArgumentException $e) {
                         // Expected
@@ -85,6 +86,7 @@ class MemoryValidationSimpleTest {
                 
                 // Interleave with valid calls
                 if ($i % 10 === 0) {
+                    /** @noinspection PhpExpressionResultUnusedInspection */
                     keccak256('deadbeef');
                 }
             }

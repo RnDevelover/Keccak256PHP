@@ -69,6 +69,7 @@ class MemoryLeakTest {
                 $input = $invalid_inputs[$i % count($invalid_inputs)];
                 
                 try {
+                    /** @noinspection PhpExpressionResultUnusedInspection */
                     keccak256($input);
                     throw new Exception("Expected exception for: $input");
                 } catch (InvalidArgumentException $e) {
