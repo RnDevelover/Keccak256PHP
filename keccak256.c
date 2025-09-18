@@ -3,6 +3,8 @@
 #endif
 #include "php.h"
 #include "php_keccak256.h"
+#include "zend_exceptions.h"
+#include "ext/spl/spl_exceptions.h"
 
 #define SHA3_ASSERT( x )
 #if defined(_MSC_VER)
@@ -122,21 +124,7 @@ sha3_Init256(void *priv)
     ctx->capacityWords = 2 * 256 / (8 * sizeof(uint64_t));
 }
 
-static void
-sha3_Init384(void *priv)
-{
-    sha3_context *ctx = (sha3_context *) priv;
-    memset(ctx, 0, sizeof(*ctx));
-    ctx->capacityWords = 2 * 384 / (8 * sizeof(uint64_t));
-}
 
-static void
-sha3_Init512(void *priv)
-{
-    sha3_context *ctx = (sha3_context *) priv;
-    memset(ctx, 0, sizeof(*ctx));
-    ctx->capacityWords = 2 * 512 / (8 * sizeof(uint64_t));
-}
 
 static void
 sha3_Update(void *priv, void const *bufIn, size_t len)
@@ -279,12 +267,15 @@ sha3_Finalize(void *priv)
     return (ctx->sb);
 }
 
+/* Argument information for keccak256 function */
+ZEND_BEGIN_ARG_INFO_EX(arginfo_keccak256, 0, 0, 1)
+    ZEND_ARG_TYPE_INFO(0, data, IS_STRING, 0)
+ZEND_END_ARG_INFO()
 
-
-
-static zend_function_entry keccak256_functions[] = {
-    PHP_FE(keccak256, NULL)
-    {NULL, NULL, NULL}
+/* Function entry table with proper argument information */
+static const zend_function_entry keccak256_functions[] = {
+    PHP_FE(keccak256, arginfo_keccak256)
+    PHP_FE_END
 };
 
 zend_module_entry keccak256_module_entry = {
@@ -307,85 +298,121 @@ zend_module_entry keccak256_module_entry = {
 #ifdef COMPILE_DL_KECCAK256
 ZEND_GET_MODULE(keccak256)
 #endif
+/* Helper function to validate hex character */
+static int is_hex_char(char c) {
+    return (c >= '0' && c <= '9') || 
+           (c >= 'A' && c <= 'F') || 
+           (c >= 'a' && c <= 'f');
+}
+
+/* Helper function to convert hex character to value */
+static unsigned char hex_char_to_value(char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    } else if (c >= 'A' && c <= 'F') {
+        return c - 'A' + 10;
+    } else if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+    }
+    return 0; /* Should never reach here if validation is done */
+}
+
 PHP_FUNCTION(keccak256)
 {
-char ob;
-char cr;
-char *ch;
-char *s;
-int count;
-int i;
-int count_mem;
-char return_string[65];
+    char *input_str;
+    size_t input_len;
+    unsigned char *binary_data = NULL;
+    size_t binary_len;
+    size_t i;
+    sha3_context c;
+    const uint8_t *hash;
+    char *result_str;
+    zend_string *result;
 
-zend_bool return_long = 0;
-if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &s, &count) == FAILURE) {
-	RETURN_NULL();
-}
-if(count%2!=0)
-	RETURN_NULL();
-ch=malloc(sizeof(char)*count/2);
-count_mem=0;
-for(i=0;i<count;i++)
-	{
-	if(s[i]<58&&s[i]>47)
-		{
-		cr=s[i]-48;
-		}
-	else if(s[i]<71&&s[i]>64)
-		{
-		cr=s[i]-55;
-		}
-	else if(s[i]<103&&s[i]>96)
-		{
-		cr=s[i]-87;
-		}
-	else
-		{
-		RETURN_NULL();
-		}
-	i++;
-	ob=cr;
-        if(s[i]<58&&s[i]>47)
-                {
-		cr=s[i]-48;
-                }
-        else if(s[i]<71&&s[i]>64)
-                {
-		cr=s[i]-55;
-                }
-        else if(s[i]<103&&s[i]>96)
-                {
-		cr=s[i]-87;
-                }
-        else
-		{
-                RETURN_NULL();
-		}
-	ch[count_mem]=cr+ob*16;
-	count_mem++;
-	}
-sha3_context c;
-const uint8_t *hash;
-sha3_Init256(&c);
-sha3_Update(&c, ch, count_mem);
-hash = sha3_Finalize(&c);
-count_mem=0;
-for(i=0;i<32;i++)
-	{
-	cr=(hash[i]&0xf0)>>4;
-	if(cr>=0&&cr<10)
-		return_string[count_mem]=cr+48;
-	else 
-		return_string[count_mem]=cr+87;
-	cr=(hash[i]&0x0F);
-	count_mem++;
-        if(cr>=0&&cr<10)
-                return_string[count_mem]=cr+48;
-        else
-                return_string[count_mem]=cr+87;
-	count_mem++;
-	}
-return_string[64]=0x00;
-RETURN_STRING(&return_string, 1);
+    /* Parse parameters with modern PHP 8 syntax */
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STRING(input_str, input_len)
+    ZEND_PARSE_PARAMETERS_END();
+
+    /* Validate input is not empty */
+    if (input_len == 0) {
+        /* Empty string is valid - hash of empty input */
+        binary_data = NULL;
+        binary_len = 0;
+    } else {
+        /* Validate input length is even */
+        if (input_len % 2 != 0) {
+            zend_throw_exception(spl_ce_InvalidArgumentException, 
+                "Input must be even-length hex string", 0);
+            return;
+        }
+
+        /* Validate all characters are valid hex */
+        for (i = 0; i < input_len; i++) {
+            if (!is_hex_char(input_str[i])) {
+                zend_throw_exception(spl_ce_InvalidArgumentException, 
+                    "Input contains non-hexadecimal characters", 0);
+                return;
+            }
+        }
+
+        /* Allocate memory for binary data using PHP memory management */
+        binary_len = input_len / 2;
+        binary_data = (unsigned char*)emalloc(binary_len);
+        if (!binary_data) {
+            /* emalloc failure is handled by PHP automatically with fatal error,
+             * but we add this check for completeness */
+            zend_throw_exception(zend_ce_error_exception, 
+                "Memory allocation failed", 0);
+            return;
+        }
+
+        /* Convert hex string to binary */
+        for (i = 0; i < binary_len; i++) {
+            unsigned char high_nibble = hex_char_to_value(input_str[i * 2]);
+            unsigned char low_nibble = hex_char_to_value(input_str[i * 2 + 1]);
+            binary_data[i] = (high_nibble << 4) | low_nibble;
+        }
+    }
+
+    /* Compute Keccak256 hash */
+    sha3_Init256(&c);
+    if (binary_data && binary_len > 0) {
+        sha3_Update(&c, binary_data, binary_len);
+    }
+    hash = sha3_Finalize(&c);
+
+    /* Convert hash to hex string */
+    result = zend_string_alloc(64, 0); /* 32 bytes * 2 chars per byte */
+    if (!result) {
+        /* Clean up binary data before throwing exception */
+        if (binary_data) {
+            efree(binary_data);
+        }
+        zend_throw_exception(zend_ce_error_exception, 
+            "Failed to allocate result string", 0);
+        return;
+    }
+    
+    result_str = ZSTR_VAL(result);
+    
+    for (i = 0; i < 32; i++) {
+        unsigned char high_nibble = (hash[i] & 0xF0) >> 4;
+        unsigned char low_nibble = hash[i] & 0x0F;
+        
+        result_str[i * 2] = (high_nibble < 10) ? 
+            (high_nibble + '0') : (high_nibble - 10 + 'a');
+        result_str[i * 2 + 1] = (low_nibble < 10) ? 
+            (low_nibble + '0') : (low_nibble - 10 + 'a');
+    }
+    
+    result_str[64] = '\0';
+    ZSTR_LEN(result) = 64;
+
+    /* Clean up binary data before returning */
+    if (binary_data) {
+        efree(binary_data);
+    }
+
+    RETURN_STR(result);
 }
