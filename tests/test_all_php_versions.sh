@@ -60,7 +60,25 @@ test_php_version() {
     
     # Clean and rebuild for this PHP version
     echo -n "Cleaning build artifacts: "
-    rm -rf .libs *.lo *.la modules/* configure config.status config.log Makefile libtool 2>/dev/null || true
+    
+    # Backup tests directory to prevent phpize --clean from deleting our test files
+    # Note: phpize --clean has a bug where it deletes .php files in tests/ directory
+    # because it assumes they are PHP's internal test files (.phpt format)
+    if [ -d "tests" ] && [ "$(ls -A tests/*.php 2>/dev/null)" ]; then
+        cp -r tests tests_backup_$$
+        [ "$VERBOSE" = true ] && echo "  Backed up tests directory"
+    fi
+    
+    # Clean build artifacts (avoid phpize --clean as it deletes .php files in tests/)
+    rm -rf .libs *.lo *.la modules/* configure config.status config.log Makefile libtool autom4te.cache build run-tests.php 2>/dev/null || true
+    
+    # Restore tests directory if it was backed up
+    if [ -d "tests_backup_$$" ]; then
+        rm -rf tests 2>/dev/null || true
+        mv tests_backup_$$ tests
+        [ "$VERBOSE" = true ] && echo "  Restored tests directory"
+    fi
+    
     echo "✓"
     
     # Build for this PHP version
