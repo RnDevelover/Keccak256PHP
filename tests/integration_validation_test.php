@@ -15,7 +15,6 @@
  */
 
 class IntegrationValidationTest {
-    private $test_results = [];
     private $total_tests = 0;
     private $passed_tests = 0;
     
@@ -118,10 +117,8 @@ class IntegrationValidationTest {
         try {
             $result = $test_function();
             $this->passed_tests++;
-            $this->test_results[] = ['name' => $test_name, 'status' => 'PASS', 'message' => $result];
             echo "  ✓ $test_name: $result\n";
         } catch (Exception $e) {
-            $this->test_results[] = ['name' => $test_name, 'status' => 'FAIL', 'message' => $e->getMessage()];
             echo "  ✗ $test_name: " . $e->getMessage() . "\n";
         }
     }

@@ -11,4 +11,6 @@
  * @return string Hex-encoded Keccak256 hash (64 characters)
  * @throws InvalidArgumentException If input is not valid hex
  */
-function keccak256(string $data): string {}
+function keccak256(string $data): string {
+    return '';
+}
