@@ -124,21 +124,7 @@ sha3_Init256(void *priv)
     ctx->capacityWords = 2 * 256 / (8 * sizeof(uint64_t));
 }
 
-static void
-sha3_Init384(void *priv)
-{
-    sha3_context *ctx = (sha3_context *) priv;
-    memset(ctx, 0, sizeof(*ctx));
-    ctx->capacityWords = 2 * 384 / (8 * sizeof(uint64_t));
-}
 
-static void
-sha3_Init512(void *priv)
-{
-    sha3_context *ctx = (sha3_context *) priv;
-    memset(ctx, 0, sizeof(*ctx));
-    ctx->capacityWords = 2 * 512 / (8 * sizeof(uint64_t));
-}
 
 static void
 sha3_Update(void *priv, void const *bufIn, size_t len)
