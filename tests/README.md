@@ -35,7 +35,12 @@ This directory contains a comprehensive test suite for the modernized Keccak256 
 - **`run_comprehensive_tests.php`** - Main test runner that executes all test suites
 - **`run_integration_tests.php`** - Integration test runner for core validation tests
 - **`valgrind_memory_test.sh`** - Valgrind-based memory leak detection script
+- **`test_all_php_versions.sh`** - Cross-version compatibility testing script
 - **`README.md`** - This documentation file
+
+### PHP Version Compatibility Tests
+
+- **`test_all_php_versions.sh`** - Automated testing across multiple PHP versions to ensure compatibility
 
 ## Running Tests
 
@@ -105,6 +110,32 @@ Or test a specific file:
 ./tests/valgrind_memory_test.sh tests/memory_leak_test.php
 ```
 
+### PHP Version Compatibility Testing
+
+To test the extension across all available PHP versions:
+
+```bash
+./tests/test_all_php_versions.sh
+```
+
+With verbose output for detailed information:
+
+```bash
+./tests/test_all_php_versions.sh --verbose
+```
+
+To see build command output for debugging:
+
+```bash
+./tests/test_all_php_versions.sh --build-output
+```
+
+For help with available options:
+
+```bash
+./tests/test_all_php_versions.sh --help
+```
+
 ## Test Categories
 
 ### 1. Known Vector Tests
@@ -164,6 +195,24 @@ These tests validate thread safety in multi-threaded environments:
 - **State isolation**: Ensures no global state interference
 - **Concurrent operations**: Simulates concurrent function calls
 - **Memory context isolation**: Tests memory management in threaded contexts
+
+### 8. PHP Version Compatibility Tests
+
+These tests ensure the extension works across multiple PHP versions:
+
+- **Dynamic version detection**: Automatically detects available PHP versions (8.0, 8.1, 8.2, 8.3, 8.4+)
+- **Build validation**: Tests compilation with each PHP version's development tools
+- **Runtime compatibility**: Validates extension loading and function execution
+- **Cross-version consistency**: Ensures identical behavior across PHP versions
+- **Tool validation**: Checks for required `phpize` and `php-config` tools
+- **Error reporting**: Detailed feedback for build or runtime failures
+
+The script tests:
+- Extension compilation with version-specific `phpize` and `php-config`
+- Extension loading without errors or warnings
+- Function correctness with known test vectors
+- Error handling consistency across versions
+- Memory management compatibility
 
 ## Test Requirements
 
@@ -248,6 +297,9 @@ php tests/run_comprehensive_tests.php --quick
 # Full validation with memory checking
 php tests/run_comprehensive_tests.php --memory-check
 
+# PHP version compatibility testing
+./tests/test_all_php_versions.sh
+
 # Valgrind testing (if available)
 if command -v valgrind &> /dev/null; then
     ./tests/valgrind_memory_test.sh
@@ -293,26 +345,44 @@ If Valgrind tests fail:
 
 The test suite covers:
 
-- ✅ **Requirements 1.1**: PHP 8.0+ compatibility validation
-- ✅ **Requirements 1.2**: No warnings or deprecation notices
-- ✅ **Requirements 1.3**: Function works identically to original implementation
-- ✅ **Requirements 5.1**: Known test vector validation
-- ✅ **Requirements 5.2**: Error condition testing
-- ✅ **Requirements 5.3**: Various input size testing
-- ✅ **Requirements 5.4**: Memory leak detection
-- ✅ **Requirements 5.5**: Thread safety (where applicable)
+- ✅ PHP 8.0+ compatibility validation
+- ✅ No warnings or deprecation notices
+- ✅ Function works identically to original implementation
+- ✅ Known test vector validation
+- ✅ Error condition testing
+- ✅ Various input size testing
+- ✅ Memory leak detection
+- ✅ Thread safety (where applicable)
 
 ### Test Statistics
 
 The complete test suite includes:
-- **15 test files** covering all aspects of the extension
+- **16 test files** covering all aspects of the extension
 - **100+ individual test cases** across all categories
 - **Core functionality tests**: 5 files
 - **Integration tests**: 2 files
 - **Memory management tests**: 2 files
 - **Performance tests**: 1 file
 - **Edge case tests**: 1 file
+- **PHP version compatibility tests**: 1 file
 - **Test runners**: 2 files
-- **Utilities**: 2 files
+- **Utilities**: 3 files
 
-This comprehensive test suite ensures the modernized Keccak256 extension meets all requirements and maintains compatibility with PHP 8.x while providing reliable performance and memory management.
+### PHP Version Coverage
+
+The `test_all_php_versions.sh` script automatically tests:
+- **PHP 8.0** - If available on the system
+- **PHP 8.1** - If available on the system  
+- **PHP 8.2** - If available on the system
+- **PHP 8.3** - If available on the system
+- **PHP 8.4+** - Future versions detected automatically
+- **Default PHP** - System default PHP binary (if different from versioned ones)
+
+Each PHP version is tested for:
+- ✅ **Build compatibility**: Extension compiles successfully
+- ✅ **Runtime loading**: Extension loads without errors
+- ✅ **Function correctness**: Produces expected hash outputs
+- ✅ **Error handling**: Proper exception throwing for invalid inputs
+- ✅ **Tool availability**: Required `phpize` and `php-config` tools present
+
+This comprehensive test suite ensures the modernized Keccak256 extension meets all requirements and maintains compatibility with PHP 8.x while providing reliable performance and memory management across multiple PHP versions.
